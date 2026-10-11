@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>调试工具</title>
+  <style>
+    body { font-family: monospace; padding: 20px; background: #1a1a1a; color: #0f0; }
+    .section { margin: 20px 0; padding: 15px; background: #2a2a2a; border-radius: 8px; }
+    input, button { padding: 10px; margin: 5px; font-size: 14px; }
+    input { width: 400px; background: #333; color: #0f0; border: 1px solid #0f0; }
+    button { background: #0f0; color: #000; border: none; cursor: pointer; font-weight: bold; }
+    .output { background: #000; padding: 10px; margin: 10px 0; border: 1px solid #0f0; }
+    .error { color: #f00; }
+    .success { color: #0f0; }
+  </style>
+</head>
+<body>
+  <h1>🔍 Platform.html 调试工具</h1>
+
+  <div class="section">
+    <h3>1. 检查你的配置</h3>
+    <label>项目 URL (projectUrl):</label><br>
+    <input type="text" id="projectUrl" value="http://192.168.110.131:3000" placeholder="http://192.168.110.131:3000">
+    <br><br>
+
+    <label>demoId:</label><br>
+    <input type="text" id="demoId" value="demo_graph1" placeholder="demo_graph1">
+    <br><br>
+
+    <label>route (路由):</label><br>
+    <input type="text" id="route" value="/demo_graph1.html" placeholder="/demo_graph1.html">
+    <br><br>
+
+    <button onclick="testUrl()">🧪 测试 URL 拼接</button>
+    <button onclick="testAccess()">🌐 测试访问</button>
+  </div>
+
+  <div class="section">
+    <h3>2. 模拟 openDemo 函数</h3>
+    <div class="output" id="result"></div>
+  </div>
+
+  <div class="section">
+    <h3>3. 实际加载测试</h3>
+    <iframe id="testFrame" style="width:100%; height:400px; border:2px solid #0f0;"></iframe>
+  </div>
+
+  <script>
+    function testUrl() {
+      const projectUrl = document.getElementById('projectUrl').value;
+      const route = document.getElementById('route').value;
+
+      // 模拟 platform.html 的逻辑
+      const baseUrl = projectUrl.replace(/\/$/, '');
+      const fullUrl = baseUrl + route;
+
+      const result = document.getElementById('result');
+      result.innerHTML = `
+        <div class="success">✅ URL 拼接结果：</div>
+        <div style="padding: 10px;">
+          <strong>baseUrl:</strong> ${baseUrl}<br>
+          <strong>route:</strong> ${route}<br>
+          <strong>完整 URL:</strong> <a href="${fullUrl}" target="_blank" style="color: #0ff;">${fullUrl}</a>
+        </div>
+        <div style="margin-top: 10px; color: #ff0;">
+          👉 点击上面的链接，看看能否在新窗口打开
+        </div>
+      `;
+    }
+
+    function testAccess() {
+      const projectUrl = document.getElementById('projectUrl').value;
+      const route = document.getElementById('route').value;
+      const baseUrl = projectUrl.replace(/\/$/, '');
+      const fullUrl = baseUrl + route;
+
+      const result = document.getElementById('result');
+      result.innerHTML = '<div style="color: #ff0;">⏳ 正在测试访问...</div>';
+
+      // 测试访问
+      fetch(fullUrl, { mode: 'no-cors' })
+        .then(() => {
+          result.innerHTML = `
+            <div class="success">✅ URL 可访问！</div>
+            <div style="padding: 10px;">
+              <strong>测试 URL:</strong> ${fullUrl}<br>
+              <strong>状态:</strong> 可以访问（或存在跨域限制，但文件存在）
+            </div>
+          `;
+
+          // 尝试加载到 iframe
+          document.getElementById('testFrame').src = fullUrl;
+        })
+        .catch(err => {
+          result.innerHTML = `
+            <div class="error">❌ 访问失败！</div>
+            <div style="padding: 10px; color: #f00;">
+              <strong>错误:</strong> ${err.message}<br>
+              <strong>URL:</strong> ${fullUrl}<br>
+              <strong>可能原因:</strong><br>
+              1. 服务器未运行<br>
+              2. IP 地址或端口不对<br>
+              3. 文件路径错误
+            </div>
+          `;
+        });
+    }
+
+    // 页面加载时自动测试
+    window.onload = () => {
+      testUrl();
+    };
+  </script>
+</body>
+</html>

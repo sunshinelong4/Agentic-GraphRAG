@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>《罗密欧与朱丽叶》信息提取可视化分析</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            color: white;
+            padding: 40px 20px;
+            margin-bottom: 30px;
+        }
+        
+        header h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stat-card .number {
+            font-size: 3em;
+            font-weight: bold;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+        
+        .stat-card .label {
+            font-size: 1.1em;
+            color: #666;
+        }
+        
+        .section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .section h2 {
+            font-size: 2em;
+            margin-bottom: 20px;
+            color: #333;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin-bottom: 30px;
+        }
+        
+        .character-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+        }
+        
+        .character-item {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .character-item:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.5);
+        }
+        
+        .character-item .name {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .character-item .count {
+            font-size: 1.2em;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+        
+        .character-item .attributes {
+            font-size: 0.9em;
+            opacity: 0.8;
+            line-height: 1.5;
+        }
+        
+        .emotion-cloud {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .emotion-tag {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 1em;
+            transition: transform 0.3s ease;
+        }
+        
+        .emotion-tag:hover {
+            transform: scale(1.1);
+        }
+        
+        .relationship-list {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        
+        .relationship-item {
+            background: #f8f9fa;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .relationship-item .text {
+            font-size: 1.1em;
+            margin-bottom: 5px;
+            color: #333;
+        }
+        
+        .relationship-item .attrs {
+            font-size: 0.9em;
+            color: #666;
+        }
+        
+        .filter-bar {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            background: #667eea;
+            color: white;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+        
+        .filter-btn:hover {
+            background: #764ba2;
+        }
+        
+        .filter-btn.active {
+            background: #764ba2;
+        }
+        
+        .search-box {
+            flex: 1;
+            min-width: 200px;
+            padding: 10px;
+            border: 2px solid #667eea;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+        
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 2em;
+            }
+            
+            .character-list {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎭 《罗密欧与朱丽叶》</h1>
+            <p>基于 LangExtract 的中文戏剧文本信息提取与可视化分析</p>
+        </header>
+        
+        <!-- 总体统计 -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="number">54,192</div>
+                <div class="label">字符总数</div>
+            </div>
+            <div class="stat-card">
+                <div class="number">1,889</div>
+                <div class="label">提取实体总数</div>
+            </div>
+            <div class="stat-card">
+                <div class="number">45</div>
+                <div class="label">不同人物数</div>
+            </div>
+            <div class="stat-card">
+                <div class="number">819</div>
+                <div class="label">情感描写</div>
+            </div>
+        </div>
+        
+        <!-- 实体类型分布 -->
+        <div class="section">
+            <h2>📊 实体类型分布</h2>
+            <div class="chart-container">
+                <canvas id="entityTypeChart"></canvas>
+            </div>
+        </div>
+        
+        <!-- 人物出现频率 -->
+        <div class="section">
+            <h2>👥 主要人物出现频率（TOP 10）</h2>
+            <div class="chart-container">
+                <canvas id="characterFreqChart"></canvas>
+            </div>
+        </div>
+        
+        <!-- 人物详细列表 -->
+        <div class="section">
+            <h2>🎬 人物详细信息</h2>
+            <div class="filter-bar">
+                <input type="text" class="search-box" id="characterSearch" placeholder="搜索人物...">
+            </div>
+            <div class="character-list" id="characterList">
+
+                <div class="character-item" data-name="朱丽叶">
+                    <div class="name">朱丽叶</div>
+                    <div class="count">出现 99 次</div>
+                    <div class="attributes">身份: 凯普莱特家族成员<br>情感状态: 顺从<br>身份: 凯普莱特家的女儿<br>情感状态: 尴尬<br>情感状态: 谨慎</div>
+                </div>
+
+                <div class="character-item" data-name="罗密欧">
+                    <div class="name">罗密欧</div>
+                    <div class="count">出现 94 次</div>
+                    <div class="attributes">情感状态: 忧郁<br>角色: 蒙太古的儿子<br>角色: 恋人<br>角色类型: 陷入爱河者<br>情感状态: 痛苦</div>
+                </div>
+
+                <div class="character-item" data-name="凯普莱特">
+                    <div class="name">凯普莱特</div>
+                    <div class="count">出现 61 次</div>
+                    <div class="attributes">情感状态: 愤怒<br>所属家族: 凯普莱特<br>角色: 家族首领<br>角色类型: 家族家长<br>情感状态: 谨慎</div>
+                </div>
+
+                <div class="character-item" data-name="乳媪">
+                    <div class="name">乳媪</div>
+                    <div class="count">出现 49 次</div>
+                    <div class="attributes">身份: 朱丽叶的奶妈<br>情感状态: 慈爱<br>情感状态: 回忆往事时的深情<br>情感状态: 赞赏<br>情感状态: 肯定</div>
+                </div>
+
+                <div class="character-item" data-name="班伏里奥">
+                    <div class="name">班伏里奥</div>
+                    <div class="count">出现 30 次</div>
+                    <div class="attributes">情感状态: 制止<br>所属家族: 蒙太古<br>情感状态: 冷静<br>角色: 蒙太古的侄儿<br>情感状态: 关心</div>
+                </div>
+
+                <div class="character-item" data-name="凯普莱特夫人">
+                    <div class="name">凯普莱特夫人</div>
+                    <div class="count">出现 30 次</div>
+                    <div class="attributes">情感状态: 劝阻<br>所属家族: 凯普莱特<br>身份: 凯普莱特家族成员，朱丽叶的母亲<br>情感状态: 关切<br>身份: 朱丽叶的母亲</div>
+                </div>
+
+                <div class="character-item" data-name="劳伦斯">
+                    <div class="name">劳伦斯</div>
+                    <div class="count">出现 29 次</div>
+                    <div class="attributes">情感状态: 关切<br>对话角色: 询问者<br>情感状态: 谨慎<br>情感状态: 祝福<br>角色: 神父</div>
+                </div>
+
+                <div class="character-item" data-name="帕里斯">
+                    <div class="name">帕里斯</div>
+                    <div class="count">出现 25 次</div>
+                    <div class="attributes">角色类型: 求婚者<br>情感状态: 期待<br>社会地位: 求婚者<br>身份: 朱丽叶的求婚者<br>情感状态: 被描述为优秀</div>
+                </div>
+
+                <div class="character-item" data-name="茂丘西奥">
+                    <div class="name">茂丘西奥</div>
+                    <div class="count">出现 22 次</div>
+                    <div class="attributes">情感状态: 劝说<br>情感状态: 鼓励<br>情感状态: 安慰<br>情感状态: 戏谑<br>情感状态: 沉思</div>
+                </div>
+
+                <div class="character-item" data-name="乐工甲">
+                    <div class="name">乐工甲</div>
+                    <div class="count">出现 21 次</div>
+                    <div class="attributes">情感状态: 无奈<br>情感状态: 遗憾<br>情感状态: 拒绝<br>情感状态: 坚决拒绝<br>情感状态: 坚定</div>
+                </div>
+
+                <div class="character-item" data-name="提伯尔特">
+                    <div class="name">提伯尔特</div>
+                    <div class="count">出现 17 次</div>
+                    <div class="attributes">情感状态: 愤怒<br>所属家族: 凯普莱特<br>角色: 家族成员<br>情感状态: 愤怒与敌意<br>情感状态: 愤怒与指控</div>
+                </div>
+
+                <div class="character-item" data-name="亲王">
+                    <div class="name">亲王</div>
+                    <div class="count">出现 15 次</div>
+                    <div class="attributes">情感状态: 震怒<br>身份: 维罗纳统治者<br>情感状态: 威严质问<br>情感状态: 震惊悲痛<br>角色: 维罗纳统治者</div>
+                </div>
+
+                <div class="character-item" data-name="彼得">
+                    <div class="name">彼得</div>
+                    <div class="count">出现 15 次</div>
+                    <div class="attributes">情感状态: 服从<br>角色功能: 仆人<br>情感状态: 辩解<br>情感状态: 顺从<br>角色: 仆人</div>
+                </div>
+
+                <div class="character-item" data-name="劳伦斯神父">
+                    <div class="name">劳伦斯神父</div>
+                    <div class="count">出现 14 次</div>
+                    <div class="attributes">情感状态: 哲思<br>角色: 神父<br>情感状态: 温和<br>地点: 寺院<br>情感状态: 询问</div>
+                </div>
+
+                <div class="character-item" data-name="仆乙">
+                    <div class="name">仆乙</div>
+                    <div class="count">出现 13 次</div>
+                    <div class="attributes">角色: 仆人<br>情感状态: 自信<br>情感状态: 不满<br>情感状态: 回应<br>情感状态: 号召</div>
+                </div>
+
+                <div class="character-item" data-name="鲍尔萨泽">
+                    <div class="name">鲍尔萨泽</div>
+                    <div class="count">出现 12 次</div>
+                    <div class="attributes">情感状态: 警觉<br>所属家族: 蒙太古<br>情感状态: 到来<br>情感状态: 悲伤报告<br>情感状态: 担忧</div>
+                </div>
+
+                <div class="character-item" data-name="蒙太古">
+                    <div class="name">蒙太古</div>
+                    <div class="count">出现 11 次</div>
+                    <div class="attributes">情感状态: 愤怒<br>所属家族: 蒙太古<br>角色: 家族首领<br>情感状态: 担忧<br>角色: 父亲</div>
+                </div>
+
+                <div class="character-item" data-name="仆人">
+                    <div class="name">仆人</div>
+                    <div class="count">出现 11 次</div>
+                    <div class="attributes">情感状态: 困惑<br>社会地位: 仆人<br>身份: 仆人<br>所属: 凯普莱特家<br>情感状态: 急切</div>
+                </div>
+
+                <div class="character-item" data-name="仆甲">
+                    <div class="name">仆甲</div>
+                    <div class="count">出现 9 次</div>
+                    <div class="attributes">角色: 仆人<br>情感状态: 顺从<br>情感状态: 忙碌抱怨<br>情感状态: 指挥忙碌<br>情感状态: 催促</div>
+                </div>
+
+                <div class="character-item" data-name="凯普莱特:夫人">
+                    <div class="name">凯普莱特:夫人</div>
+                    <div class="count">出现 6 次</div>
+                    <div class="attributes">情感状态: 关切<br>情感状态: 责备<br>情感状态: 关心<br>情感状态: 劝阻</div>
+                </div>
+
+                <div class="character-item" data-name="乐工乙">
+                    <div class="name">乐工乙</div>
+                    <div class="count">出现 6 次</div>
+                    <div class="attributes">情感状态: 劝解<br>情感状态: 回答<br>情感状态: 愤怒<br>角色类型: 乐工<br>情感状态: 愤怒计划</div>
+                </div>
+
+                <div class="character-item" data-name="约翰">
+                    <div class="name">约翰</div>
+                    <div class="count">出现 6 次</div>
+                    <div class="attributes">情感状态: 急切<br>情感状态: 无奈<br>身份: 劳伦斯的师弟<br>情感状态: 寻找<br>身份: 修士</div>
+                </div>
+
+                <div class="character-item" data-name="侍童">
+                    <div class="name">侍童</div>
+                    <div class="count">出现 5 次</div>
+                    <div class="attributes">情感状态: 恐惧<br>身份: 帕里斯的随从<br>情感状态: 惊慌<br>角色: 帕里斯的随从<br>角色: 帕里斯的侍童</div>
+                </div>
+
+                <div class="character-item" data-name="市民甲">
+                    <div class="name">市民甲</div>
+                    <div class="count">出现 4 次</div>
+                    <div class="attributes">情感状态: 追查<br>情感状态: 质问<br>对话对象: 班伏里奥<br>情感状态: 命令<br>对话对象: 提伯尔特</div>
+                </div>
+
+                <div class="character-item" data-name="卖药人">
+                    <div class="name">卖药人</div>
+                    <div class="count">出现 3 次</div>
+                    <div class="attributes">情感状态: 犹豫<br>情感状态: 贫穷与矛盾</div>
+                </div>
+
+                <div class="character-item" data-name="巡丁甲">
+                    <div class="name">巡丁甲</div>
+                    <div class="count">出现 3 次</div>
+                    <div class="attributes">角色: 巡夜人<br>角色类型: 巡丁<br>行动: 提出嫌疑<br>行动: 报告死亡</div>
+                </div>
+
+                <div class="character-item" data-name="巡丁丙">
+                    <div class="name">巡丁丙</div>
+                    <div class="count">出现 3 次</div>
+                    <div class="attributes">角色类型: 巡丁<br>行动: 报告发现<br>情感状态: 警觉<br>身份: 巡丁</div>
+                </div>
+
+                <div class="character-item" data-name="约翰神父">
+                    <div class="name">约翰神父</div>
+                    <div class="count">出现 3 次</div>
+                    <div class="attributes">身份: 神父<br>相关事件: 未能送达信件<br>身份: 带信人<br>职责: 送信<br>遭遇: 遭遇意外不能脱身</div>
+                </div>
+
+                <div class="character-item" data-name="山普孙">
+                    <div class="name">山普孙</div>
+                    <div class="count">出现 2 次</div>
+                    <div class="attributes">情感状态: 愤怒<br>所属家族: 凯普莱特<br>情感状态: 挑衅</div>
+                </div>
+
+                <div class="character-item" data-name="葛莱古里">
+                    <div class="name">葛莱古里</div>
+                    <div class="count">出现 2 次</div>
+                    <div class="attributes">情感状态: 挑衅<br>所属家族: 凯普莱特<br>情感状态: 怂恿</div>
+                </div>
+
+                <div class="character-item" data-name="亚伯拉罕">
+                    <div class="name">亚伯拉罕</div>
+                    <div class="count">出现 2 次</div>
+                    <div class="attributes">情感状态: 警觉<br>所属家族: 蒙太古<br>情感状态: 质问</div>
+                </div>
+
+                <div class="character-item" data-name="蒙太古夫人">
+                    <div class="name">蒙太古夫人</div>
+                    <div class="count">出现 2 次</div>
+                    <div class="attributes">情感状态: 劝阻<br>所属家族: 蒙太古<br>情感状态: 担忧<br>角色: 母亲</div>
+                </div>
+
+                <div class="character-item" data-name="致辞者">
+                    <div class="name">致辞者</div>
+                    <div class="count">出现 2 次</div>
+                    <div class="attributes">情感状态: 叙述<br>角色类型: 旁白/叙述者</div>
+                </div>
+
+                <div class="character-item" data-name="乐工丙">
+                    <div class="name">乐工丙</div>
+                    <div class="count">出现 2 次</div>
+                    <div class="attributes">情感状态: 困惑<br>角色类型: 乐工</div>
+                </div>
+
+                <div class="character-item" data-name="蒙太古:夫人">
+                    <div class="name">蒙太古:夫人</div>
+                    <div class="count">出现 2 次</div>
+                    <div class="attributes">情感状态: 劝阻<br>情感状态: 关心<br>社会地位: 蒙太古妻子</div>
+                </div>
+
+                <div class="character-item" data-name="仆丙">
+                    <div class="name">仆丙</div>
+                    <div class="count">出现 2 次</div>
+                    <div class="attributes">情感状态: 无奈<br>说话对象: 仆甲和仆乙</div>
+                </div>
+
+                <div class="character-item" data-name="罗瑟琳">
+                    <div class="name">罗瑟琳</div>
+                    <div class="count">出现 1 次</div>
+                    <div class="attributes">情感状态: 被遗忘<br>角色关系: 罗密欧的前恋人</div>
+                </div>
+
+                <div class="character-item" data-name="凯普莱特的美丽的女儿">
+                    <div class="name">凯普莱特的美丽的女儿</div>
+                    <div class="count">出现 1 次</div>
+                    <div class="attributes">情感状态: 相爱<br>角色关系: 罗密欧的新恋人</div>
+                </div>
+
+                <div class="character-item" data-name="奶妈">
+                    <div class="name">奶妈</div>
+                    <div class="count">出现 1 次</div>
+                    <div class="attributes">角色: 仆人</div>
+                </div>
+
+                <div class="character-item" data-name="母亲">
+                    <div class="name">母亲</div>
+                    <div class="count">出现 1 次</div>
+                    <div class="attributes">情感状态: 恳求<br>关系: 朱丽叶的对话对象</div>
+                </div>
+
+                <div class="character-item" data-name="蒙太古:夫妇">
+                    <div class="name">蒙太古:夫妇</div>
+                    <div class="count">出现 1 次</div>
+                    <div class="attributes">情感状态: 担忧<br>社会地位: 家族首领</div>
+                </div>
+
+                <div class="character-item" data-name="敬爱的神明">
+                    <div class="name">敬爱的神明</div>
+                    <div class="count">出现 1 次</div>
+                    <div class="attributes">情感状态: 痛恨</div>
+                </div>
+
+                <div class="character-item" data-name="俊秀的蒙太古">
+                    <div class="name">俊秀的蒙太古</div>
+                    <div class="count">出现 1 次</div>
+                    <div class="attributes">情感状态: 痴心</div>
+                </div>
+
+                <div class="character-item" data-name="提伯尔特及其党徒">
+                    <div class="name">提伯尔特及其党徒</div>
+                    <div class="count">出现 1 次</div>
+                    <div class="attributes">行为: 离开现场</div>
+                </div>
+
+                <div class="character-item" data-name="巡丁乙">
+                    <div class="name">巡丁乙</div>
+                    <div class="count">出现 1 次</div>
+                    <div class="attributes">身份: 巡夜人<br>情感状态: 报告</div>
+                </div>
+
+            </div>
+        </div>
+        
+        <!-- 情感分析 -->
+        <div class="section">
+            <h2>💖 情感描写（前50个）</h2>
+            <div class="emotion-cloud">
+<div class="emotion-tag">咱们可真的不能让人家当做苦力一样欺侮。</div>
+<div class="emotion-tag">咱们不是可以随便给人欺侮的。</div>
+<div class="emotion-tag">咱们要是发起脾气来，就会拔剑动武。</div>
+<div class="emotion-tag">我一动性子，我的剑是不认人的。</div>
+<div class="emotion-tag">我见了蒙太古家的狗子就生气。</div>
+<div class="emotion-tag">我要做一个杀人不眨眼的魔王；一面跟男人们打架，一面对娘儿们也...</div>
+<div class="emotion-tag">我的剑已经出鞘；你去跟他们吵起来，我就在你背后帮你的忙。</div>
+<div class="emotion-tag">我要向他们咬我的大拇指，瞧他们能不能忍受这样的侮辱。</div>
+<div class="emotion-tag">你向我们咬你的大拇指吗？</div>
+<div class="emotion-tag">我是咬我的大拇指。</div>
+<div class="emotion-tag">你是向我们咬你的大拇指吗？</div>
+<div class="emotion-tag">是他们的理直。</div>
+<div class="emotion-tag">不，我不是向你们咬我的大拇指；可是我是咬我的大拇指。</div>
+<div class="emotion-tag">你是要向我们挑衅吗？</div>
+<div class="emotion-tag">挑衅！不，哪儿的话。</div>
+<div class="emotion-tag">你要是想跟我们吵架，那么我可以奉陪；你也是你家主子的奴才，我...</div>
+<div class="emotion-tag">比不上。</div>
+<div class="emotion-tag">好。</div>
+<div class="emotion-tag">说“比得上”；我家老爷的一位亲戚来了。</div>
+<div class="emotion-tag">比得上。</div>
+<div class="emotion-tag">你胡说。</div>
+<div class="emotion-tag">是汉子就拔出剑来。</div>
+<div class="emotion-tag">别忘了你的杀手剑。</div>
+<div class="emotion-tag">分开，蠢才！收起你们的剑；你们不知道你们在干些什么事。</div>
+<div class="emotion-tag">怎么！你跟这些不中用的奴才吵架吗？过来，班伏里奥，让我结果你...</div>
+<div class="emotion-tag">我不过维持和平；收起你的剑，或者帮我分开这些人。</div>
+<div class="emotion-tag">什么！你拔出了剑，还说什么和平？我痛恨这两个字，就跟我痛恨地...</div>
+<div class="emotion-tag">打！打！打！把他们打下来！打倒凯普莱特！打倒蒙太古！</div>
+<div class="emotion-tag">什么事吵得这个样子？喂！把我的长剑拿来。</div>
+<div class="emotion-tag">拐杖呢？拐杖呢？你要剑干什么？</div>
+<div class="emotion-tag">快拿剑来！蒙太古那老东西来啦；他还晃着他的剑，明明在跟我寻事...</div>
+<div class="emotion-tag">凯普莱特，你这奸贼！别拉住我；让我走。</div>
+<div class="emotion-tag">你要去跟人家吵架，我连一步也不让你走。</div>
+<div class="emotion-tag">目无法纪的臣民，扰乱治安的罪人，你们的刀剑都被你们邻人的血玷...</div>
+<div class="emotion-tag">你们已经三次为了一句口头上的空言，引起了市民的械斗，扰乱了我...</div>
+<div class="emotion-tag">这一场宿怨是谁又重新煽风点火？</div>
+<div class="emotion-tag">我还没有到这儿来，您的仇家的仆人跟你们家里的仆人已经打成一团...</div>
+<div class="emotion-tag">夫人啊，罗密欧呢？你今天见过他吗？我很高兴他没有参加这场争斗...</div>
+<div class="emotion-tag">我因为自己也是心灰意懒，觉得连自己这一身也是多余的，只想找一...</div>
+<div class="emotion-tag">好多天的早上曾经有人在那边看见过他，用眼泪洒为清晨的露水，用...</div>
+<div class="emotion-tag">伯父，您知道他的烦恼的根源吗？</div>
+<div class="emotion-tag">我不知道，也没有法子从他自己嘴里探听出来。</div>
+<div class="emotion-tag">可是他把心事一古脑儿闷在自己肚里，总是守口如瓶，不让人家试探...</div>
+<div class="emotion-tag">瞧，他来了；请您站在一旁，等我去问问他究竟有些什么心事，看他...</div>
+<div class="emotion-tag">唉！在悲哀里度过的时间似乎是格外长的</div>
+<div class="emotion-tag">因为我缺少了可以使时间变为短促的东西</div>
+<div class="emotion-tag">我不能得到我的意中人的欢心</div>
+<div class="emotion-tag">唉！想不到爱神的外表这样温柔，实际上却是如此残暴！</div>
+<div class="emotion-tag">唉！想不到爱神蒙着眼睛，却会一直闯进人们的心灵！</div>
+<div class="emotion-tag">我感觉到的爱情正是这么一种东西，可是我并不喜爱这一种爱情</div>
+
+            </div>
+        </div>
+        
+        <!-- 关系分析 -->
+        <div class="section">
+            <h2>🔗 人物关系（前30条）</h2>
+            <div class="relationship-list">
+
+                <div class="relationship-item">
+                    <div class="text">我见了蒙太古家里人来，是男人我就把他们从墙边推出去，是女人我就把她们望着墙壁摔过去。</div>
+                    <div class="attrs">类型: 敌对, 人物1: 山普孙, 人物2: 蒙太古家族</div>
+                </div>
+
+                <div class="relationship-item">
+                    <div class="text">双方互斗</div>
+                    <div class="attrs">类型: 冲突, 人物1: 山普孙/葛莱古里, 人物2: 亚伯拉罕, 家族关系: 凯普莱特 vs 蒙太古</div>
+                </div>
+
+                <div class="relationship-item">
+                    <div class="text">二人相斗</div>
+                    <div class="attrs">类型: 决斗, 人物1: 班伏里奥, 人物2: 提伯尔特, 家族关系: 蒙太古 vs 凯普莱特</div>
+                </div>
+
+                <div class="relationship-item">
+                    <div class="text">两家各有若干人上，加入争斗</div>
+                    <div class="attrs">类型: 家族冲突, 人物1: 凯普莱特家族, 人物2: 蒙太古家族, 规模: 群体冲突</div>
+                </div>
+
+                <div class="relationship-item">
+                    <div class="text">凯普莱特:，你跟我来；蒙太古:，你今天下午到自由村的审判厅里来，听候我对于今天这一案的宣判。</div>
+                    <div class="attrs">类型: 命令, 人物1: 凯普莱特, 人物2: 蒙太古</div>
+                </div>
+
+                <div class="relationship-item">
+                    <div class="text">那个性如烈火的提伯尔特提着剑来了，他对我出言不逊，把剑在他自己头上舞得嗖嗖直响，就像风在那儿讥笑他的装腔作势一样。</div>
+                    <div class="attrs">类型: 冲突, 人物1: 班伏里奥, 人物2: 提伯尔特</div>
+                </div>
+
+                <div class="relationship-item">
+                    <div class="text">他这一种怪脾气恐怕不是好兆，除非良言劝告可以替他解除心头的烦恼。</div>
+                    <div class="attrs">类型: 担忧, 人物1: 蒙太古, 人物2: 罗密欧</div>
+                </div>
+
+                <div class="relationship-item">
+                    <div class="text">正像一条初生的蓓蕾，还没有迎风舒展它的嫩瓣，向太阳献吐它的娇艳，就给妒嫉的蛀虫咬啮了一样</div>
+                    <div class="attrs">类型: 比喻, 人物1: 罗密欧, 人物2: 爱情/命运</div>
+                </div>
+
+                <div class="relationship-item">
+                    <div class="text">你跌进恋爱的网里了吗？</div>
+                    <div class="attrs">类型: 询问, 人物1: 班伏里奥, 人物2: 罗密欧</div>
+                </div>
+
+                <div class="relationship-item">
+                    <div class="text">因为瞧着你善良的心受到这样的痛苦</div>
+                    <div class="attrs">类型: 同情, 人物1: 班伏里奥, 人物2: 罗密欧</div>
+                </div>
+
+                <div class="relationship-item">
+                    <div class="text">爱情是叹息吹起的一阵烟；恋人的眼中有它净化了的火星；恋人的眼泪是它激起的波涛。它又是最智慧的疯狂，哽喉的苦味，吃不到嘴的蜜糖</div>
+                    <div class="attrs">类型: 比喻, 人物1: 罗密欧, 人物2: 爱情</div>
+                </div>
+
+                <div class="relationship-item">
+                    <div class="text">且慢，让我跟你一块儿去；要是你就这样丢下了我，未免太不给我面子啦</div>
+                    <div class="attrs">类型: 请求陪伴, 人物1: 班伏里奥, 人物2: 罗密欧</div>
+                </div>
+
+                <div class="relationship-item">
+                    <div class="text">可是蒙太古也负着跟我同样的责任；我想像我们这样有了年纪的人，维持和平还不是难事。</div>
+                    <div class="attrs">类型: 责任对比, 人物1: 凯普莱特, 人物2: 蒙太古</div>
+                </div>
+
+                <div class="relationship-item">
+                    <div class="text">你们两家都是很有名望的大族，结下了这样不解的冤仇，真是一件不幸的事。</div>
+                    <div class="attrs">类型: 家族矛盾描述, 人物1: 凯普莱特家族, 人物2: 蒙太古家族</div>
+                </div>
+
+                <div class="relationship-item">
+                    <div class="text">得到她的欢心；只要她愿意，我的同意是没有问题的。</div>
+                    <div class="attrs">类型: 许可与支持, 人物1: 凯普莱特, 人物2: 帕里斯</div>
+                </div>
+
+                <div class="relationship-item">
+                    <div class="text">罗密欧:等一等，朋友；我会念。</div>
+                    <div class="attrs">类型: 帮助, 人物1: 罗密欧, 人物2: 仆人</div>
+                </div>
+
+                <div class="relationship-item">
+                    <div class="text">我的主人就是那个有财有势的凯普莱特</div>
+                    <div class="attrs">类型: 主仆关系, 人物1: 仆人, 人物2: 凯普莱特</div>
+                </div>
+
+                <div class="relationship-item">
+                    <div class="text">你所热恋的美人罗瑟琳也要跟着维洛那城里所有的绝色名媛一同去赴宴</div>
+                    <div class="attrs">类型: 爱恋关系, 人物1: 罗密欧, 人物2: 罗瑟琳</div>
+                </div>
+
+                <div class="relationship-item">
+                    <div class="text">比我的爱人还美！烛照万物的太阳，自有天地以来也不曾看见过一个可以和她媲美的人</div>
+                    <div class="attrs">类型: 赞美与比喻, 人物1: 罗密欧, 人物2: 罗瑟琳</div>
+                </div>
+
+                <div class="relationship-item">
+                    <div class="text">你的母亲</div>
+                    <div class="attrs">类型: 母女关系, 人物1: 朱丽叶, 人物2: 凯普莱特夫人</div>
+                </div>
+
+                <div class="relationship-item">
+                    <div class="text">她现在还不满十四岁</div>
+                    <div class="attrs">类型: 年龄信息, 人物1: 朱丽叶, 人物2: 凯普莱特夫人</div>
+                </div>
+
+                <div class="relationship-item">
+                    <div class="text">不多不少，不先不后，到收获节的晚上她才满十四岁</div>
+                    <div class="attrs">类型: 年龄信息, 人物1: 朱丽叶, 人物2: 乳媪</div>
+                </div>
+
+                <div class="relationship-item">
+                    <div class="text">要是我能够活到有一天瞧着你嫁了出去，也算了结我的一桩心愿啦。</div>
+                    <div class="attrs">类型: 愿望, 人物1: 乳媪, 人物2: 朱丽叶</div>
+                </div>
+
+                <div class="relationship-item">
+                    <div class="text">维洛那的夏天找不到这样一朵好花。</div>
+                    <div class="attrs">类型: 比喻, 人物1: 凯普莱特夫人, 人物2: 帕里斯</div>
+                </div>
+
+                <div class="relationship-item">
+                    <div class="text">从年轻的帕里斯:的脸上，你可以读到用秀美的笔写成的迷人诗句；一根根齐整的线条，交织成整个一幅谐和的图画；要是你想探索这一卷美好的书中的奥秘，在他的眼角上可以找到微妙的诠释。这本珍贵的恋爱的经典，只缺少一帧可以使它相得益彰的封面；正像游鱼需要活水，美妙的内容也少不了美妙的外表陪衬。记载着金科玉律的宝籍，锁合在漆金的封面里，它的辉煌富丽为众目所共见；要是你做了他的封面，那么他所有的一切都属于你所有了。</div>
+                    <div class="attrs">类型: 比喻, 人物1: 凯普莱特, 人物2: 帕里斯</div>
+                </div>
+
+                <div class="relationship-item">
+                    <div class="text">她是精灵们的稳婆</div>
+                    <div class="attrs">类型: 身份描述, 人物1: 茂丘西奥, 人物2: 春梦婆</div>
+                </div>
+
+                <div class="relationship-item">
+                    <div class="text">她是天上明珠降落人间！</div>
+                    <div class="attrs">类型: 比喻, 人物1: 罗密欧, 人物2: 朱丽叶（未命名）</div>
+                </div>
+
+                <div class="relationship-item">
+                    <div class="text">听这个人的声音，好像是一个蒙太古家里的人。</div>
+                    <div class="attrs">类型: 敌对识别, 人物1: 提伯尔特, 人物2: 罗密欧</div>
+                </div>
+
+                <div class="relationship-item">
+                    <div class="text">掌心的密合远胜如亲吻</div>
+                    <div class="attrs">类型: 比喻, 人物1: 朱丽叶, 人物2: 罗密欧</div>
+                </div>
+
+                <div class="relationship-item">
+                    <div class="text">是蒙太古:家里的人，咱们仇家的独子</div>
+                    <div class="attrs">类型: 敌对关系, 人物1: 罗密欧, 人物2: 朱丽叶家族</div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 实体类型分布饼图
+        const entityTypeCtx = document.getElementById('entityTypeChart').getContext('2d');
+        new Chart(entityTypeCtx, {
+            type: 'doughnut',
+            data: {
+
+                labels: ["\u60c5\u611f", "\u4eba\u7269", "\u5173\u7cfb", "extraction_text"],
+                datasets: [{
+                    data: [819, 641, 278, 151],
+                    backgroundColor: [
+                        'rgba(102, 126, 234, 0.8)',
+                        'rgba(118, 75, 162, 0.8)',
+                        'rgba(240, 147, 251, 0.8)',
+                        'rgba(245, 87, 108, 0.8)'
+                    ],
+                    borderWidth: 2,
+                    borderColor: 'white'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            font: {
+                                size: 14
+                            },
+                            padding: 20
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.parsed || 0;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = ((value / total) * 100).toFixed(1);
+                                return label + ': ' + value + ' (' + percentage + '%)';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        // 人物频率柱状图
+        const characterFreqCtx = document.getElementById('characterFreqChart').getContext('2d');
+        new Chart(characterFreqCtx, {
+            type: 'bar',
+            data: {
+
+                labels: ["\u6731\u4e3d\u53f6", "\u7f57\u5bc6\u6b27", "\u51ef\u666e\u83b1\u7279", "\u4e73\u5aaa", "\u73ed\u4f0f\u91cc\u5965", "\u51ef\u666e\u83b1\u7279\u592b\u4eba", "\u52b3\u4f26\u65af", "\u5e15\u91cc\u65af", "\u8302\u4e18\u897f\u5965", "\u4e50\u5de5\u7532"],
+                datasets: [{
+                    label: '出现次数',
+                    data: [99, 94, 61, 49, 30, 30, 29, 25, 22, 21],
+                    backgroundColor: 'rgba(102, 126, 234, 0.8)',
+                    borderColor: 'rgba(102, 126, 234, 1)',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            font: {
+                                size: 14
+                            }
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            font: {
+                                size: 14
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+        
+        // 人物搜索功能
+        const searchBox = document.getElementById('characterSearch');
+        const characterItems = document.querySelectorAll('.character-item');
+        
+        searchBox.addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            characterItems.forEach(item => {
+                const name = item.dataset.name.toLowerCase();
+                if (name.includes(searchTerm)) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+    </script>
+</body>
+</html>

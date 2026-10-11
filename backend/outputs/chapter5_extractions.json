@@ -1,0 +1,317 @@
+[
+  {
+    "doc_id": "doc_001",
+    "doc_title": "../test.pdf",
+    "extraction_class": "实体",
+    "extraction_text": "（2024）京0105民初12345号",
+    "char_interval": {
+      "start_pos": 16,
+      "end_pos": 35
+    },
+    "attributes": {
+      "类型": "案号",
+      "法院代码": "京0105",
+      "年度": "2024",
+      "案件类别": "民初",
+      "序号": "12345"
+    }
+  },
+  {
+    "doc_id": "doc_001",
+    "doc_title": "../test.pdf",
+    "extraction_class": "实体",
+    "extraction_text": "民间借贷纠纷",
+    "char_interval": {
+      "start_pos": 40,
+      "end_pos": 46
+    },
+    "attributes": {
+      "类型": "案由",
+      "性质": "民事纠纷"
+    }
+  },
+  {
+    "doc_id": "doc_001",
+    "doc_title": "../test.pdf",
+    "extraction_class": "实体",
+    "extraction_text": "张三",
+    "char_interval": {
+      "start_pos": 51,
+      "end_pos": 53
+    },
+    "attributes": {
+      "类型": "人物",
+      "角色": "原告"
+    }
+  },
+  {
+    "doc_id": "doc_001",
+    "doc_title": "../test.pdf",
+    "extraction_class": "实体",
+    "extraction_text": "李四",
+    "char_interval": {
+      "start_pos": 58,
+      "end_pos": 60
+    },
+    "attributes": {
+      "类型": "人物",
+      "角色": "被告"
+    }
+  },
+  {
+    "doc_id": "doc_001",
+    "doc_title": "../test.pdf",
+    "extraction_class": "实体",
+    "extraction_text": "2023年1月15日",
+    "char_interval": {
+      "start_pos": 73,
+      "end_pos": 83
+    },
+    "attributes": {
+      "类型": "时间",
+      "对应事件": "借款日期"
+    }
+  },
+  {
+    "doc_id": "doc_001",
+    "doc_title": "../test.pdf",
+    "extraction_class": "关系描述",
+    "extraction_text": "被告李四因资金周转需要向原告张三借款人民币50万元",
+    "char_interval": {
+      "start_pos": 84,
+      "end_pos": 109
+    },
+    "attributes": {
+      "类型": "借款关系",
+      "主体1": "李四",
+      "主体2": "张三",
+      "关系": "借款",
+      "金额": "50万元"
+    }
+  },
+  {
+    "doc_id": "doc_001",
+    "doc_title": "../test.pdf",
+    "extraction_class": "事件",
+    "extraction_text": "双方签订《借款合同》",
+    "char_interval": {
+      "start_pos": 112,
+      "end_pos": 122
+    },
+    "attributes": {
+      "类型": "签订合同",
+      "参与者": [
+        "张三",
+        "李四"
+      ],
+      "合同": "借款合同"
+    }
+  },
+  {
+    "doc_id": "doc_001",
+    "doc_title": "../test.pdf",
+    "extraction_class": "数据指标",
+    "extraction_text": "一年",
+    "char_interval": null,
+    "attributes": {
+      "指标": "借款期限",
+      "数值": "1",
+      "单位": "年"
+    }
+  },
+  {
+    "doc_id": "doc_001",
+    "doc_title": "../test.pdf",
+    "extraction_class": "数据指标",
+    "extraction_text": "12%",
+    "char_interval": {
+      "start_pos": 137,
+      "end_pos": 140
+    },
+    "attributes": {
+      "指标": "年利率",
+      "数值": "12",
+      "单位": "%"
+    }
+  },
+  {
+    "doc_id": "doc_001",
+    "doc_title": "../test.pdf",
+    "extraction_class": "实体",
+    "extraction_text": "2024年1月15日",
+    "char_interval": {
+      "start_pos": 147,
+      "end_pos": 157
+    },
+    "attributes": {
+      "类型": "时间",
+      "对应事件": "借款到期日"
+    }
+  },
+  {
+    "doc_id": "doc_001",
+    "doc_title": "../test.pdf",
+    "extraction_class": "数据指标",
+    "extraction_text": "10万元",
+    "char_interval": {
+      "start_pos": 171,
+      "end_pos": 175
+    },
+    "attributes": {
+      "指标": "已偿还本金",
+      "数值": "100000",
+      "单位": "元"
+    }
+  },
+  {
+    "doc_id": "doc_001",
+    "doc_title": "../test.pdf",
+    "extraction_class": "数据指标",
+    "extraction_text": "40万元",
+    "char_interval": {
+      "start_pos": 180,
+      "end_pos": 182
+    },
+    "attributes": {
+      "指标": "未还本金",
+      "数值": "400000",
+      "单位": "元"
+    }
+  },
+  {
+    "doc_id": "doc_001",
+    "doc_title": "../test.pdf",
+    "extraction_class": "事件",
+    "extraction_text": "原告多次催要未果，遂诉至法院",
+    "char_interval": {
+      "start_pos": 194,
+      "end_pos": 208
+    },
+    "attributes": {
+      "类型": "起诉",
+      "原告": "张三",
+      "被告": "李四",
+      "法院": "法院"
+    }
+  },
+  {
+    "doc_id": "doc_001",
+    "doc_title": "../test.pdf",
+    "extraction_class": "实体",
+    "extraction_text": "法院",
+    "char_interval": null,
+    "attributes": {
+      "类型": "机构",
+      "类别": "司法机构"
+    }
+  },
+  {
+    "doc_id": "doc_001",
+    "doc_title": "../test.pdf",
+    "extraction_class": "实体",
+    "extraction_text": "《中华人民共和国民法典》第六百七十五条",
+    "char_interval": {
+      "start_pos": 328,
+      "end_pos": 340
+    },
+    "attributes": {
+      "类型": "法条",
+      "法律名称": "中华人民共和国民法典",
+      "条款号": "第六百七十五条"
+    }
+  },
+  {
+    "doc_id": "doc_001",
+    "doc_title": "../test.pdf",
+    "extraction_class": "关系描述",
+    "extraction_text": "被告未按期足额还款，构成违约",
+    "char_interval": {
+      "start_pos": 371,
+      "end_pos": 385
+    },
+    "attributes": {
+      "类型": "违约关系",
+      "主体1": "李四",
+      "主体2": "张三",
+      "关系": "违约",
+      "违约行为": "未按期足额还款"
+    }
+  },
+  {
+    "doc_id": "doc_001",
+    "doc_title": "../test.pdf",
+    "extraction_class": "实体",
+    "extraction_text": "《最高人民法院关于审理民间借贷案件适用法律若干问题的规定》第二十五条",
+    "char_interval": {
+      "start_pos": 406,
+      "end_pos": 442
+    },
+    "attributes": {
+      "类型": "法条",
+      "法律名称": "最高人民法院关于审理民间借贷案件适用法律若干问题的规定",
+      "条款号": "第二十五条"
+    }
+  },
+  {
+    "doc_id": "doc_001",
+    "doc_title": "../test.pdf",
+    "extraction_class": "数据指标",
+    "extraction_text": "四倍",
+    "char_interval": null,
+    "attributes": {
+      "指标": "利率上限倍数",
+      "数值": "4",
+      "单位": "倍"
+    }
+  },
+  {
+    "doc_id": "doc_001",
+    "doc_title": "../test.pdf",
+    "extraction_class": "事件",
+    "extraction_text": "被告李四于本判决生效之日起十日内偿还原告张三借款本金40万元",
+    "char_interval": {
+      "start_pos": 493,
+      "end_pos": 523
+    },
+    "attributes": {
+      "类型": "判决内容",
+      "义务人": "李四",
+      "权利人": "张三",
+      "给付内容": "偿还借款本金40万元",
+      "履行期限": "本判决生效之日起十日内"
+    }
+  },
+  {
+    "doc_id": "doc_001",
+    "doc_title": "../test.pdf",
+    "extraction_class": "事件",
+    "extraction_text": "被告李四于本判决生效之日起十日内支付原告张三利息（以40万元为基数，按年利率12%计算，自2024年1月16日起至实际清偿之日止）",
+    "char_interval": {
+      "start_pos": 528,
+      "end_pos": 595
+    },
+    "attributes": {
+      "类型": "判决内容",
+      "义务人": "李四",
+      "权利人": "张三",
+      "给付内容": "支付利息",
+      "计算方式": "以40万元为基数，按年利率12%计算，自2024年1月16日起至实际清偿之日止",
+      "履行期限": "本判决生效之日起十日内"
+    }
+  },
+  {
+    "doc_id": "doc_001",
+    "doc_title": "../test.pdf",
+    "extraction_class": "事件",
+    "extraction_text": "驳回原告张三的其他诉讼请求",
+    "char_interval": {
+      "start_pos": 600,
+      "end_pos": 613
+    },
+    "attributes": {
+      "类型": "判决内容",
+      "裁判结果": "驳回其他诉讼请求",
+      "原告": "张三"
+    }
+  }
+]

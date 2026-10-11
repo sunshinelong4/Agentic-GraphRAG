@@ -1,0 +1,247 @@
+{
+  "entities": {
+    "（2024）京0105民初12345号": {
+      "type": "实体",
+      "attributes": {
+        "类型": "案号",
+        "法院代码": "京0105",
+        "年度": "2024",
+        "案件类别": "民初",
+        "序号": "12345"
+      },
+      "mentions": [
+        {
+          "source": "../test.pdf",
+          "position": {
+            "start_pos": 16,
+            "end_pos": 35
+          }
+        }
+      ]
+    },
+    "民间借贷纠纷": {
+      "type": "实体",
+      "attributes": {
+        "类型": "案由",
+        "性质": "民事纠纷"
+      },
+      "mentions": [
+        {
+          "source": "../test.pdf",
+          "position": {
+            "start_pos": 40,
+            "end_pos": 46
+          }
+        }
+      ]
+    },
+    "张三": {
+      "type": "实体",
+      "attributes": {
+        "类型": "人物",
+        "角色": "原告"
+      },
+      "mentions": [
+        {
+          "source": "../test.pdf",
+          "position": {
+            "start_pos": 51,
+            "end_pos": 53
+          }
+        }
+      ]
+    },
+    "李四": {
+      "type": "实体",
+      "attributes": {
+        "类型": "人物",
+        "角色": "被告"
+      },
+      "mentions": [
+        {
+          "source": "../test.pdf",
+          "position": {
+            "start_pos": 58,
+            "end_pos": 60
+          }
+        }
+      ]
+    },
+    "2023年1月15日": {
+      "type": "实体",
+      "attributes": {
+        "类型": "时间",
+        "对应事件": "借款日期"
+      },
+      "mentions": [
+        {
+          "source": "../test.pdf",
+          "position": {
+            "start_pos": 73,
+            "end_pos": 83
+          }
+        }
+      ]
+    },
+    "一年": {
+      "type": "数据指标",
+      "attributes": {
+        "指标": "借款期限",
+        "数值": "1",
+        "单位": "年"
+      },
+      "mentions": [
+        {
+          "source": "../test.pdf",
+          "position": null
+        }
+      ]
+    },
+    "12%": {
+      "type": "数据指标",
+      "attributes": {
+        "指标": "年利率",
+        "数值": "12",
+        "单位": "%"
+      },
+      "mentions": [
+        {
+          "source": "../test.pdf",
+          "position": {
+            "start_pos": 137,
+            "end_pos": 140
+          }
+        }
+      ]
+    },
+    "2024年1月15日": {
+      "type": "实体",
+      "attributes": {
+        "类型": "时间",
+        "对应事件": "借款到期日"
+      },
+      "mentions": [
+        {
+          "source": "../test.pdf",
+          "position": {
+            "start_pos": 147,
+            "end_pos": 157
+          }
+        }
+      ]
+    },
+    "10万元": {
+      "type": "数据指标",
+      "attributes": {
+        "指标": "已偿还本金",
+        "数值": "100000",
+        "单位": "元"
+      },
+      "mentions": [
+        {
+          "source": "../test.pdf",
+          "position": {
+            "start_pos": 171,
+            "end_pos": 175
+          }
+        }
+      ]
+    },
+    "40万元": {
+      "type": "数据指标",
+      "attributes": {
+        "指标": "未还本金",
+        "数值": "400000",
+        "单位": "元"
+      },
+      "mentions": [
+        {
+          "source": "../test.pdf",
+          "position": {
+            "start_pos": 180,
+            "end_pos": 182
+          }
+        }
+      ]
+    },
+    "法院": {
+      "type": "实体",
+      "attributes": {
+        "类型": "机构",
+        "类别": "司法机构"
+      },
+      "mentions": [
+        {
+          "source": "../test.pdf",
+          "position": null
+        }
+      ]
+    },
+    "《中华人民共和国民法典》第六百七十五条": {
+      "type": "实体",
+      "attributes": {
+        "类型": "法条",
+        "法律名称": "中华人民共和国民法典",
+        "条款号": "第六百七十五条"
+      },
+      "mentions": [
+        {
+          "source": "../test.pdf",
+          "position": {
+            "start_pos": 328,
+            "end_pos": 340
+          }
+        }
+      ]
+    },
+    "《最高人民法院关于审理民间借贷案件适用法律若干问题的规定》第二十五条": {
+      "type": "实体",
+      "attributes": {
+        "类型": "法条",
+        "法律名称": "最高人民法院关于审理民间借贷案件适用法律若干问题的规定",
+        "条款号": "第二十五条"
+      },
+      "mentions": [
+        {
+          "source": "../test.pdf",
+          "position": {
+            "start_pos": 406,
+            "end_pos": 442
+          }
+        }
+      ]
+    },
+    "四倍": {
+      "type": "数据指标",
+      "attributes": {
+        "指标": "利率上限倍数",
+        "数值": "4",
+        "单位": "倍"
+      },
+      "mentions": [
+        {
+          "source": "../test.pdf",
+          "position": null
+        }
+      ]
+    }
+  },
+  "relations": [
+    {
+      "text": "被告李四因资金周转需要向原告张三借款人民币50万元",
+      "type": "借款关系",
+      "subject": "李四",
+      "object": "张三",
+      "relation": "借款",
+      "source": "../test.pdf"
+    },
+    {
+      "text": "被告未按期足额还款，构成违约",
+      "type": "违约关系",
+      "subject": "李四",
+      "object": "张三",
+      "relation": "违约",
+      "source": "../test.pdf"
+    }
+  ]
+}

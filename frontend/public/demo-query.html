@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>查询演示</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #1a1a2e;
+      min-height: 100vh;
+      padding: 40px 20px;
+      color: white;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    h1 {
+      font-size: 32px;
+      margin-bottom: 30px;
+      color: #00d4ff;
+      text-align: center;
+    }
+    .query-box {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(0,212,255,0.3);
+      border-radius: 12px;
+      padding: 30px;
+      margin-bottom: 20px;
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 15px;
+      border: 1px solid rgba(0,212,255,0.5);
+      border-radius: 8px;
+      background: rgba(255,255,255,0.1);
+      color: white;
+      font-size: 16px;
+      margin-bottom: 15px;
+    }
+    input[type="text"]:focus {
+      outline: none;
+      border-color: #00d4ff;
+    }
+    button {
+      width: 100%;
+      padding: 15px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    button:hover {
+      transform: translateY(-2px);
+    }
+    .result {
+      background: rgba(0,255,136,0.1);
+      border: 1px solid rgba(0,255,136,0.3);
+      border-radius: 8px;
+      padding: 20px;
+      margin-top: 20px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🔍 智能查询演示</h1>
+
+    <div class="query-box">
+      <input type="text" id="queryInput" placeholder="输入你的查询...">
+      <button onclick="executeQuery()">执行查询</button>
+
+      <div class="result" id="result">
+        <h3 style="color: #00ff88; margin-bottom: 10px;">查询结果</h3>
+        <p id="resultText"></p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function executeQuery() {
+      const input = document.getElementById('queryInput').value;
+      const result = document.getElementById('result');
+      const resultText = document.getElementById('resultText');
+
+      if (input.trim()) {
+        resultText.textContent = `查询 "${input}" 的结果将在这里显示。这是一个演示页面，你可以集成真实的 API 调用。`;
+        result.style.display = 'block';
+      } else {
+        alert('请输入查询内容');
+      }
+    }
+  </script>
+</body>
+</html>

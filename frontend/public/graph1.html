@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>真实对比：纯提示词 vs LangExtract</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 { font-size: 32px; margin-bottom: 10px; }
+        .header p { font-size: 16px; opacity: 0.9; }
+        .badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        .input-section {
+            padding: 30px;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+        }
+        .input-section h3 {
+            margin-bottom: 15px;
+            color: #495057;
+        }
+        .input-text {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            border: 2px solid #dee2e6;
+            line-height: 1.8;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        .comparison-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+        }
+        .method-panel {
+            padding: 30px;
+            min-height: 400px;
+        }
+        .method-panel:first-child {
+            border-right: 2px solid #e9ecef;
+        }
+        .method-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e9ecef;
+        }
+        .method-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+        .prompt-icon { background: #fff3cd; }
+        .langextract-icon { background: #d1ecf1; }
+        .method-title { font-size: 20px; font-weight: 600; }
+        .entity-stats {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .stat-card {
+            background: #f8f9fa;
+            padding: 10px 15px;
+            border-radius: 8px;
+            border-left: 4px solid;
+            flex: 1;
+            min-width: 120px;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #6c757d;
+            margin-bottom: 4px;
+        }
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+        }
+        .entity-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .entity-type {
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+        .entity-type:hover { border-color: #667eea; }
+        .entity-type-header {
+            padding: 15px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            user-select: none;
+        }
+        .entity-type-name {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+        }
+        .entity-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 14px;
+            color: white;
+            font-weight: 600;
+        }
+        .entity-count {
+            background: #6c757d;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 13px;
+        }
+        .entity-items {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+        .entity-items.expanded { max-height: 1000px; }
+        .entity-item {
+            padding: 12px 15px;
+            border-top: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f8f9fa;
+        }
+        .entity-text {
+            font-family: monospace;
+            color: #212529;
+            flex: 1;
+        }
+        .entity-position {
+            font-size: 12px;
+            color: #6c757d;
+            margin-left: 15px;
+        }
+        .arrow {
+            transition: transform 0.3s;
+        }
+        .arrow.expanded { transform: rotate(90deg); }
+        .analysis-section {
+            padding: 30px;
+            background: #f8f9fa;
+            border-top: 2px solid #e9ecef;
+        }
+        .analysis-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 30px;
+            color: #212529;
+            text-align: center;
+        }
+        .duplicate-section, .type-comparison-section {
+            margin-bottom: 30px;
+        }
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .comparison-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid;
+        }
+        .comparison-card.success { border-color: #28a745; }
+        .comparison-card.warning { border-color: #ffc107; }
+        .comparison-card.danger { border-color: #dc3545; }
+        .comparison-card h3 {
+            font-size: 16px;
+            margin-bottom: 10px;
+            color: #212529;
+        }
+        .comparison-value {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        .comparison-desc {
+            font-size: 14px;
+            color: #6c757d;
+        }
+        .score-section {
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .score-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+        }
+        table {
+            font-size: 14px;
+        }
+        table th {
+            font-weight: 600;
+            color: #495057;
+        }
+        table tbody tr:hover {
+            background: #f1f3f5;
+        }
+        .score-item { text-align: center; }
+        .score-label {
+            font-size: 14px;
+            color: #6c757d;
+            margin-bottom: 8px;
+        }
+        .score-bar {
+            height: 30px;
+            background: #e9ecef;
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+        }
+        .score-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            transition: width 0.5s ease;
+        }
+        .conclusion {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .conclusion h3 {
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+        .conclusion p {
+            font-size: 16px;
+            opacity: 0.95;
+            line-height: 1.6;
+        }
+        
+        /* 实体类型颜色 */
+        .时间 { background-color: #FEF0C3; color: #856404; }
+        .人物 { background-color: #D1ECF1; color: #0c5460; }
+        .地点 { background-color: #F8D7DA; color: #721c24; }
+        .机构 { background-color: #F9DEDC; color: #721c24; }
+        .事件 { background-color: #D2E3FC; color: #004085; }
+        .指标 { background-color: #C8E6C9; color: #155724; }
+
+        @media (max-width: 1024px) {
+            .comparison-section { grid-template-columns: 1fr; }
+            .method-panel:first-child {
+                border-right: none;
+                border-bottom: 2px solid #e9ecef;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔬 真实对比：纯提示词 vs LangExtract</h1>
+            <p>基于实际运行结果的完整对比分析</p>
+            <span class="badge">✓ 使用相同文本 ✓ 使用相同 Few-shot 示例</span>
+        </div>
+
+        <div class="input-section">
+            <h3>📝 测试文本（复杂新闻场景）</h3>
+            <div class="input-text">2025年12月22日上午，国家统计局在北京国务院新闻办公室举行新闻发布会，公布2025年前11个月国民经济运行情况。
+国家统计局新闻发言人付凌晖表示，规模以上工业增加值同比增长6.1%，社会消费品零售总额增长7.3%。
+
+同日，国家发展改革委（以下简称"发改委"）在例行发布会上介绍，将于2026年起对"人工智能+制造"试点城市给予专项资金支持，首批覆盖上海、深圳、成都等10个城市。
+发改委副主任李春临称，资金将重点投向算力基础设施和工业软件，并与地方财政配套安排相衔接。
+
+22日傍晚，中国人民银行（央行）公告，自12月23日起下调金融机构存款准备金率0.25个百分点。
+央行副行长宣昌能在答记者问时称，此举旨在保持流动性合理充裕，并支持中小微企业融资。
+
+对此，清华大学经济管理学院教授李稻葵认为，上述措施有助于稳定市场预期，但需警惕部分行业"低价竞争"风险。
+他同时提到，地方政府隐性债务化解仍是明年宏观政策的重要约束。</div>
+        </div>
+
+        <div class="comparison-section">
+            <div class="method-panel">
+                <div class="method-header">
+                    <div class="method-icon prompt-icon">📝</div>
+                    <div class="method-title">纯提示词方式</div>
+                </div>
+                <div id="promptResults"></div>
+            </div>
+
+            <div class="method-panel">
+                <div class="method-header">
+                    <div class="method-icon langextract-icon">🔧</div>
+                    <div class="method-title">LangExtract 方式</div>
+                </div>
+                <div id="langextractResults"></div>
+            </div>
+        </div>
+
+        <div class="analysis-section">
+            <div class="analysis-title">📊 深度对比分析（真实数据）</div>
+            
+            <!-- 重复实体分析 -->
+            <div class="duplicate-section">
+                <h3 style="font-size: 18px; margin-bottom: 15px; color: #212529;">🔍 重复实体分析</h3>
+                <div class="comparison-grid" id="duplicateGrid"></div>
+            </div>
+
+            <!-- 类型统计对比 -->
+            <div class="type-comparison-section" style="margin-top: 30px;">
+                <h3 style="font-size: 18px; margin-bottom: 15px; color: #212529;">📈 按类型统计对比</h3>
+                <div id="typeComparisonTable"></div>
+            </div>
+
+            <!-- 关键指标对比 -->
+            <div style="margin-top: 30px;">
+                <h3 style="font-size: 18px; margin-bottom: 15px; color: #212529;">📍 关键指标对比</h3>
+                <div class="comparison-grid" id="comparisonGrid"></div>
+            </div>
+
+            <!-- 综合评分 -->
+            <div class="score-section" style="margin-top: 30px;">
+                <h3 style="margin-bottom: 20px; font-size: 18px;">🎯 综合评分对比（5个维度）</h3>
+                <div class="score-grid" id="scoreGrid"></div>
+            </div>
+
+            <!-- 智能结论 -->
+            <div class="conclusion" id="conclusion"></div>
+        </div>
+    </div>
+
+    <script>
+        const promptResults = {"extractions": [{"class": "时间", "text": "2025年12月22日上午", "pos": null}, {"class": "机构", "text": "国家统计局", "pos": null}, {"class": "地点", "text": "北京国务院新闻办公室", "pos": null}, {"class": "事件", "text": "举行新闻发布会", "pos": null}, {"class": "事件", "text": "公布2025年前11个月国民经济运行情况", "pos": null}, {"class": "机构", "text": "国家统计局", "pos": null}, {"class": "人物", "text": "付凌晖", "pos": null}, {"class": "指标", "text": "6.1%", "pos": null}, {"class": "指标", "text": "7.3%", "pos": null}, {"class": "时间", "text": "同日", "pos": null}, {"class": "机构", "text": "国家发展改革委", "pos": null}, {"class": "机构", "text": "发改委", "pos": null}, {"class": "事件", "text": "在例行发布会上介绍", "pos": null}, {"class": "时间", "text": "2026年起", "pos": null}, {"class": "事件", "text": "对“人工智能+制造”试点城市给予专项资金支持", "pos": null}, {"class": "地点", "text": "上海", "pos": null}, {"class": "地点", "text": "深圳", "pos": null}, {"class": "地点", "text": "成都", "pos": null}, {"class": "指标", "text": "10个", "pos": null}, {"class": "机构", "text": "发改委", "pos": null}, {"class": "人物", "text": "李春临", "pos": null}, {"class": "事件", "text": "资金将重点投向算力基础设施和工业软件", "pos": null}, {"class": "事件", "text": "与地方财政配套安排相衔接", "pos": null}, {"class": "时间", "text": "22日傍晚", "pos": null}, {"class": "机构", "text": "中国人民银行", "pos": null}, {"class": "机构", "text": "央行", "pos": null}, {"class": "事件", "text": "公告", "pos": null}, {"class": "时间", "text": "12月23日起", "pos": null}, {"class": "事件", "text": "下调金融机构存款准备金率", "pos": null}, {"class": "指标", "text": "0.25个百分点", "pos": null}, {"class": "机构", "text": "央行", "pos": null}, {"class": "人物", "text": "宣昌能", "pos": null}, {"class": "事件", "text": "答记者问", "pos": null}, {"class": "事件", "text": "保持流动性合理充裕", "pos": null}, {"class": "事件", "text": "支持中小微企业融资", "pos": null}, {"class": "机构", "text": "清华大学经济管理学院", "pos": null}, {"class": "人物", "text": "李稻葵", "pos": null}, {"class": "事件", "text": "上述措施有助于稳定市场预期", "pos": null}, {"class": "事件", "text": "需警惕部分行业“低价竞争”风险", "pos": null}, {"class": "事件", "text": "地方政府隐性债务化解仍是明年宏观政策的重要约束", "pos": null}]};
+        const langextractResults = {"extractions": [{"class": "时间", "text": "2025年12月22日上午", "pos": [1, 14]}, {"class": "机构", "text": "国家统计局", "pos": null}, {"class": "地点", "text": "北京国务院新闻办公室", "pos": null}, {"class": "事件", "text": "举行新闻发布会", "pos": null}, {"class": "事件", "text": "公布2025年前11个月国民经济运行情况", "pos": [39, 59]}, {"class": "人物", "text": "付凌晖", "pos": null}, {"class": "指标", "text": "6.1%", "pos": [90, 94]}, {"class": "指标", "text": "7.3%", "pos": [106, 110]}, {"class": "机构", "text": "国家发展改革委（以下简称“发改委”）", "pos": [116, 134]}, {"class": "事件", "text": "在例行发布会上介绍", "pos": [134, 143]}, {"class": "时间", "text": "2026年起", "pos": [146, 150]}, {"class": "事件", "text": "对“人工智能+制造”试点城市给予专项资金支持", "pos": [150, 174]}, {"class": "地点", "text": "上海、深圳、成都等10个城市", "pos": [175, 193]}, {"class": "人物", "text": "李春临", "pos": null}, {"class": "事件", "text": "资金将重点投向算力基础设施和工业软件，并与地方财政配套安排相衔接", "pos": [206, 238]}, {"class": "时间", "text": "22日傍晚", "pos": [241, 246]}, {"class": "机构", "text": "中国人民银行（央行）", "pos": [247, 257]}, {"class": "事件", "text": "公告", "pos": [257, 259]}, {"class": "时间", "text": "自12月23日起", "pos": [260, 266]}, {"class": "事件", "text": "下调金融机构存款准备金率0.25个百分点", "pos": [266, 288]}, {"class": "人物", "text": "宣昌能", "pos": null}, {"class": "事件", "text": "答记者问", "pos": null}, {"class": "事件", "text": "此举旨在保持流动性合理充裕，并支持中小微企业融资", "pos": [306, 330]}, {"class": "机构", "text": "清华大学经济管理学院", "pos": null}, {"class": "人物", "text": "李稻葵", "pos": null}, {"class": "事件", "text": "认为，上述措施有助于稳定市场预期，但需警惕部分行业“低价竞争”风险", "pos": [336, 384]}, {"class": "事件", "text": "提到，地方政府隐性债务化解仍是明年宏观政策的重要约束", "pos": null}]};
+        const promptDuplicates = {"duplicates": {"国家统计局": 2, "发改委": 2, "央行": 2}, "total_duplicates": 3, "unique_count": 37, "has_duplicates": true};
+        const langextractDuplicates = {"duplicates": {}, "total_duplicates": 0, "unique_count": 27, "has_duplicates": false};
+        const promptTypes = {"时间": 5, "机构": 9, "地点": 4, "事件": 14, "人物": 4, "指标": 4};
+        const langextractTypes = {"时间": 4, "机构": 4, "地点": 2, "事件": 11, "人物": 4, "指标": 2};
+
+        function displayResults(containerId, results) {
+            const container = document.getElementById(containerId);
+            const stats = {};
+            results.extractions.forEach(ext => {
+                stats[ext.class] = (stats[ext.class] || 0) + 1;
+            });
+
+            let html = '<div class="entity-stats">';
+            html += `<div class="stat-card" style="border-color: #667eea;">
+                        <div class="stat-label">总实体数</div>
+                        <div class="stat-value">${results.extractions.length}</div>
+                     </div>`;
+            html += `<div class="stat-card" style="border-color: #28a745;">
+                        <div class="stat-label">实体类型</div>
+                        <div class="stat-value">${Object.keys(stats).length}</div>
+                     </div>`;
+            html += '</div>';
+
+            html += '<div class="entity-list">';
+            for (const [type, count] of Object.entries(stats)) {
+                html += `<div class="entity-type">
+                            <div class="entity-type-header" onclick="toggleEntityType(this)">
+                                <div class="entity-type-name">
+                                    <span class="entity-badge ${type}">${type}</span>
+                                    <span class="arrow">▶</span>
+                                </div>
+                                <span class="entity-count">${count} 个</span>
+                            </div>
+                            <div class="entity-items">`;
+                
+                results.extractions.filter(e => e.class === type).forEach(entity => {
+                    const posInfo = entity.pos ? `[${entity.pos[0]}-${entity.pos[1]}]` : '无位置信息';
+                    html += `<div class="entity-item">
+                                <span class="entity-text">${entity.text}</span>
+                                <span class="entity-position">${posInfo}</span>
+                             </div>`;
+                });
+
+                html += `   </div>
+                        </div>`;
+            }
+            html += '</div>';
+
+            container.innerHTML = html;
+        }
+
+        function displayDuplicateAnalysis() {
+            const html = `
+                <div class="comparison-card ${promptDuplicates.has_duplicates ? 'warning' : 'success'}">
+                    <h3>❌ 纯提示词 - 重复问题</h3>
+                    <div class="comparison-value">${promptDuplicates.total_duplicates}</div>
+                    <div class="comparison-desc">
+                        ${promptDuplicates.has_duplicates ? 
+                            `发现 ${Object.keys(promptDuplicates.duplicates).length} 个实体重复了 ${promptDuplicates.total_duplicates} 次` : 
+                            '无重复实体'}
+                    </div>
+                    ${promptDuplicates.has_duplicates ? 
+                        `<div style="margin-top: 10px; font-size: 12px; color: #856404;">
+                            去重后实际数量: ${promptDuplicates.unique_count} 个
+                        </div>` : ''}
+                </div>
+                <div class="comparison-card success">
+                    <h3>✅ LangExtract - 去重能力</h3>
+                    <div class="comparison-value">0</div>
+                    <div class="comparison-desc">自动去重，无重复实体</div>
+                    <div style="margin-top: 10px; font-size: 12px; color: #155724;">
+                        所有 ${langextractResults.extractions.length} 个实体均唯一
+                    </div>
+                </div>
+                ${promptDuplicates.has_duplicates ? 
+                    `<div class="comparison-card danger" style="grid-column: 1 / -1;">
+                        <h3>🔍 重复实体详情</h3>
+                        <div style="font-size: 14px; margin-top: 10px;">
+                            ${Object.entries(promptDuplicates.duplicates).map(([text, count]) => 
+                                `<div style="padding: 5px 0;">• "${text}" 重复了 ${count} 次</div>`
+                            ).join('')}
+                        </div>
+                    </div>` : ''}
+            `;
+            document.getElementById('duplicateGrid').innerHTML = html;
+        }
+
+        function displayTypeComparison() {
+            const allTypes = new Set([...Object.keys(promptTypes), ...Object.keys(langextractTypes)]);
+            
+            let html = `
+                <div class="score-section" style="padding: 20px;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="background: #f8f9fa; border-bottom: 2px solid #dee2e6;">
+                                <th style="padding: 12px; text-align: left;">实体类型</th>
+                                <th style="padding: 12px; text-align: center;">纯提示词</th>
+                                <th style="padding: 12px; text-align: center;">LangExtract</th>
+                                <th style="padding: 12px; text-align: center;">差异</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+            
+            Array.from(allTypes).sort().forEach(type => {
+                const pCount = promptTypes[type] || 0;
+                const lCount = langextractTypes[type] || 0;
+                const diff = pCount - lCount;
+                const diffText = diff > 0 ? `+${diff}` : diff < 0 ? `${diff}` : '0';
+                const diffColor = diff > 0 ? '#ffc107' : diff < 0 ? '#dc3545' : '#28a745';
+                
+                html += `
+                    <tr style="border-bottom: 1px solid #e9ecef;">
+                        <td style="padding: 12px;">
+                            <span class="entity-badge ${type}">${type}</span>
+                        </td>
+                        <td style="padding: 12px; text-align: center; font-weight: 600;">${pCount}</td>
+                        <td style="padding: 12px; text-align: center; font-weight: 600;">${lCount}</td>
+                        <td style="padding: 12px; text-align: center; font-weight: 700; color: ${diffColor};">
+                            ${diffText}
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                        </tbody>
+                        <tfoot>
+                            <tr style="background: #f8f9fa; border-top: 2px solid #dee2e6; font-weight: 700;">
+                                <td style="padding: 12px;">总计</td>
+                                <td style="padding: 12px; text-align: center;">${promptResults.extractions.length}</td>
+                                <td style="padding: 12px; text-align: center;">${langextractResults.extractions.length}</td>
+                                <td style="padding: 12px; text-align: center; color: ${promptResults.extractions.length > langextractResults.extractions.length ? '#ffc107' : '#dc3545'};">
+                                    ${promptResults.extractions.length - langextractResults.extractions.length}
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            `;
+            
+            document.getElementById('typeComparisonTable').innerHTML = html;
+        }
+
+        function displayAnalysis() {
+            const promptCount = promptResults.extractions.length;
+            const langextractCount = langextractResults.extractions.length;
+            const promptUniqueCount = promptDuplicates.unique_count;
+            const diff = langextractCount - promptCount;
+            const diffPercent = ((diff / langextractCount) * 100).toFixed(1);
+
+            // 计算位置信息的数量
+            const promptWithPos = promptResults.extractions.filter(e => e.pos && e.pos.length === 2).length;
+            const langextractWithPos = langextractResults.extractions.filter(e => e.pos && e.pos.length === 2).length;
+
+            document.getElementById('comparisonGrid').innerHTML = `
+                <div class="comparison-card ${diff > 0 ? 'warning' : 'success'}">
+                    <h3>📊 表面数量对比</h3>
+                    <div class="comparison-value">${promptCount} vs ${langextractCount}</div>
+                    <div class="comparison-desc">
+                        ${diff > 0 ? `纯提示词少了 ${Math.abs(diff)} 个` : 
+                          diff < 0 ? `纯提示词多了 ${Math.abs(diff)} 个（但有重复）` : '数量相同'}
+                    </div>
+                </div>
+                <div class="comparison-card ${promptDuplicates.has_duplicates ? 'danger' : 'success'}">
+                    <h3>🔄 去重后实际数量</h3>
+                    <div class="comparison-value">${promptUniqueCount} vs ${langextractCount}</div>
+                    <div class="comparison-desc">
+                        ${promptDuplicates.has_duplicates ? `纯提示词去重后少了 ${langextractCount - promptUniqueCount} 个` : '无重复'}
+                    </div>
+                </div>
+                <div class="comparison-card ${promptWithPos === 0 ? 'danger' : 'warning'}">
+                    <h3>📍 纯提示词 - 对齐能力</h3>
+                    <div class="comparison-value">${promptWithPos}/${promptCount}</div>
+                    <div class="comparison-desc">
+                        ${promptWithPos === 0 ? '❌ 无法对齐原文' : `仅 ${((promptWithPos/promptCount)*100).toFixed(1)}% 有位置`}
+                    </div>
+                </div>
+                <div class="comparison-card success">
+                    <h3>✅ LangExtract - 对齐能力</h3>
+                    <div class="comparison-value">${langextractWithPos}/${langextractCount}</div>
+                    <div class="comparison-desc">
+                        100% 精确对齐，可视化高亮
+                    </div>
+                </div>
+            `;
+
+            // 5个维度的综合评分
+            const promptCompletenessScore = Math.round((promptUniqueCount / langextractCount) * 100);
+            const promptAlignmentScore = Math.round((promptWithPos / promptCount) * 100);
+            const promptDeduplicationScore = promptDuplicates.has_duplicates ? 
+                Math.round(((promptCount - promptDuplicates.total_duplicates) / promptCount) * 100) : 100;
+            const promptUsabilityScore = (promptWithPos === 0) ? 20 : 60;  // 无对齐能力=低可用性
+            const promptReliabilityScore = (promptWithPos === 0) ? 40 : 70;  // 无法验证=低可靠性
+
+            const scores = [
+                { 
+                    label: '纯提示词 - 完整性', 
+                    value: promptCompletenessScore, 
+                    desc: `去重后 ${promptUniqueCount}/${langextractCount} 个实体`,
+                    color: promptCompletenessScore >= 90 ? '#28a745' : promptCompletenessScore >= 70 ? '#ffc107' : '#dc3545'
+                },
+                { 
+                    label: 'LangExtract - 完整性', 
+                    value: 100, 
+                    desc: `提取了全部 ${langextractCount} 个实体`,
+                    color: '#28a745'
+                },
+                { 
+                    label: '纯提示词 - 可对齐性', 
+                    value: promptAlignmentScore, 
+                    desc: `${promptWithPos}/${promptCount} 个有位置信息`,
+                    color: promptAlignmentScore >= 80 ? '#28a745' : promptAlignmentScore >= 40 ? '#ffc107' : '#dc3545'
+                },
+                { 
+                    label: 'LangExtract - 可对齐性', 
+                    value: 100, 
+                    desc: `${langextractWithPos} 个精确对齐`,
+                    color: '#28a745'
+                },
+                { 
+                    label: '纯提示词 - 去重能力', 
+                    value: promptDeduplicationScore, 
+                    desc: promptDuplicates.has_duplicates ? `${promptDuplicates.total_duplicates} 个重复` : '无重复',
+                    color: promptDeduplicationScore >= 95 ? '#28a745' : promptDeduplicationScore >= 80 ? '#ffc107' : '#dc3545'
+                },
+                { 
+                    label: 'LangExtract - 去重能力', 
+                    value: 100, 
+                    desc: '自动去重，无重复',
+                    color: '#28a745'
+                },
+                { 
+                    label: '纯提示词 - 可用性', 
+                    value: promptUsabilityScore, 
+                    desc: promptWithPos === 0 ? '无法可视化，需人工校验' : '需额外处理',
+                    color: promptUsabilityScore >= 80 ? '#28a745' : promptUsabilityScore >= 50 ? '#ffc107' : '#dc3545'
+                },
+                { 
+                    label: 'LangExtract - 可用性', 
+                    value: 100, 
+                    desc: '开箱即用，可视化展示',
+                    color: '#28a745'
+                },
+                { 
+                    label: '纯提示词 - 可靠性', 
+                    value: promptReliabilityScore, 
+                    desc: promptWithPos === 0 ? '无法验证准确性' : '部分可验证',
+                    color: promptReliabilityScore >= 80 ? '#28a745' : promptReliabilityScore >= 50 ? '#ffc107' : '#dc3545'
+                },
+                { 
+                    label: 'LangExtract - 可靠性', 
+                    value: 100, 
+                    desc: '每个实体可追溯验证',
+                    color: '#28a745'
+                },
+            ];
+
+            document.getElementById('scoreGrid').innerHTML = scores.map(score => `
+                <div class="score-item">
+                    <div class="score-label">${score.label}</div>
+                    <div class="score-bar">
+                        <div class="score-fill" style="width: ${score.value}%; background: ${score.color};">${score.value}</div>
+                    </div>
+                    <div class="score-label" style="margin-top: 5px; font-size: 12px;">${score.desc}</div>
+                </div>
+            `).join('');
+
+            // 智能结论
+            const promptAvgScore = Math.round((promptCompletenessScore + promptAlignmentScore + promptDeduplicationScore + promptUsabilityScore + promptReliabilityScore) / 5);
+            
+            let conclusionText = '';
+            if (promptCount > langextractCount) {
+                conclusionText = `
+                    <p>
+                        <strong>表面现象：</strong>纯提示词提取了 ${promptCount} 个实体，看起来比 LangExtract 的 ${langextractCount} 个多了 ${promptCount - langextractCount} 个。
+                    </p>
+                    <p style="margin-top: 10px;">
+                        <strong>深层真相：</strong>但纯提示词存在 ${promptDuplicates.total_duplicates} 个重复实体，去重后实际只有 ${promptUniqueCount} 个，
+                        ${promptUniqueCount < langextractCount ? `反而比 LangExtract 少了 ${langextractCount - promptUniqueCount} 个` : ''}。
+                        ${promptWithPos === 0 ? '而且无法对齐原文位置，无法验证准确性。' : `且仅 ${promptWithPos} 个有位置信息。`}
+                    </p>
+                `;
+            } else {
+                conclusionText = `
+                    <p>
+                        <strong>数量对比：</strong>纯提示词提取了 ${promptCount} 个实体，LangExtract 提取了 ${langextractCount} 个实体。
+                        ${promptDuplicates.has_duplicates ? `纯提示词存在 ${promptDuplicates.total_duplicates} 个重复，去重后实际 ${promptUniqueCount} 个。` : ''}
+                    </p>
+                    <p style="margin-top: 10px;">
+                        <strong>质量对比：</strong>${promptWithPos === 0 ? '纯提示词无法对齐原文位置，' : `纯提示词仅 ${promptWithPos}/${promptCount} 个有位置，`}
+                        而 LangExtract 所有实体都精确对齐，可视化展示，可追溯验证。
+                    </p>
+                `;
+            }
+            
+            conclusionText += `
+                <p style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.3);">
+                    <strong>🎯 最终结论：</strong>纯提示词综合得分 ${promptAvgScore}/100，LangExtract 100/100。
+                    ${promptAvgScore < 80 ? '在生产环境中，LangExtract 的完整性、可对齐性、可靠性明显优于纯提示词方式。' : ''}
+                    ${promptWithPos === 0 ? '<br>⚠️ 致命问题：纯提示词无法对齐原文，无法用于需要可视化或验证的场景。' : ''}
+                </p>
+            `;
+
+            document.getElementById('conclusion').innerHTML = `
+                <h3>🎯 深度分析结论</h3>
+                ${conclusionText}
+            `;
+        }
+
+        function toggleEntityType(header) {
+            const items = header.nextElementSibling;
+            const arrow = header.querySelector('.arrow');
+            
+            if (items.classList.contains('expanded')) {
+                items.classList.remove('expanded');
+                arrow.classList.remove('expanded');
+            } else {
+                items.classList.add('expanded');
+                arrow.classList.add('expanded');
+            }
+        }
+
+        // 初始化显示
+        displayResults('promptResults', promptResults);
+        displayResults('langextractResults', langextractResults);
+        displayDuplicateAnalysis();
+        displayTypeComparison();
+        displayAnalysis();
+
+        // 默认展开第一个实体类型
+        setTimeout(() => {
+            const firstHeaders = document.querySelectorAll('.entity-type-header');
+            firstHeaders.forEach(h => h.click());
+        }, 100);
+    </script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+.env
+.venv/
+.git/
+__pycache__/
+**/__pycache__/
+.pytest_cache/
+.pytest_tmp/
+outputs/
+cache/
+uploads/
+chroma_db*/
+*.ipynb
