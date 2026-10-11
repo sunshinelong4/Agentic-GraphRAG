@@ -72,3 +72,5 @@ backend/evaluation/.chroma_eval/
 backend/outputs/knowledge_graph_store.json
 backend/chroma_db_chapter5/
 backend/chroma_db/
+
+docs/
